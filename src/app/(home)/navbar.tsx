@@ -4,6 +4,9 @@ import { cn } from "@/lib/utils";
 import { Poppins } from "next/font/google";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import NavbarSideabr from "./navbar-siadebar";
+import React, { useState } from "react";
+import { MenuIcon } from "lucide-react";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -40,7 +43,9 @@ const NavbarItem = ({ children, isActive, href }: NavbarItemProps) => {
 };
 
 const Navbar = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
+
   return (
     <nav className="h-20 flex border-b justify-between font-medium bg-white">
       <Link href={"/"} className="pl-6 flex items-center">
@@ -48,6 +53,12 @@ const Navbar = () => {
           funroad
         </span>
       </Link>
+
+      <NavbarSideabr
+        items={navbarItems}
+        open={isSidebarOpen}
+        onOpenChange={setIsSidebarOpen}
+      />
 
       <div className="lg:flex hidden items-center gap-4 ">
         {navbarItems.map((item) => (
@@ -59,6 +70,32 @@ const Navbar = () => {
             {item.children}
           </NavbarItem>
         ))}
+      </div>
+
+      <div className="lg:hidden flex items-center justify-center">
+        <Button
+          variant={"ghost"}
+          className="border-transparent bg-white size-12"
+          onClick={() => setIsSidebarOpen(true)}
+        >
+          <MenuIcon />
+        </Button>
+      </div>
+
+      <div className="hidden lg:flex items-center justify-center h-full">
+        <Button
+          asChild
+          variant={"secondary"}
+          className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-white text-black text-lg trasnisition-colors"
+        >
+          <Link href={"/sign-in"}>Login</Link>
+        </Button>
+        <Button
+          asChild
+          className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-black text-white text-lg trasnisition-colors hover:text-black"
+        >
+          <Link href={"/sign-up"}>Start Selling</Link>
+        </Button>
       </div>
     </nav>
   );
