@@ -88,13 +88,17 @@ const Navbar = () => {
           variant={"secondary"}
           className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-white text-black text-lg trasnisition-colors"
         >
-          <Link href={"/sign-in"}>Login</Link>
+          <Link prefetch href={"/sign-in"}>
+            Login
+          </Link>
         </Button>
         <Button
           asChild
           className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-black text-white text-lg trasnisition-colors hover:text-black"
         >
-          <Link href={"/sign-up"}>Start Selling</Link>
+          <Link prefetch href={"/sign-up"}>
+            Start Selling
+          </Link>
         </Button>
       </div>
     </nav>

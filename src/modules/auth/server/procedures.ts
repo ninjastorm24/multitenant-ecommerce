@@ -1,8 +1,8 @@
 import { baseProcedure, createTRPCRouter } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { cookies as getCookies, headers as getHeaders } from "next/headers";
-import z from "zod";
 import { AUTH_COOKIE } from "../constants";
+import { loginSchema, registerSchema } from "../schemas";
 
 export const authRouter = createTRPCRouter({
   session: baseProcedure.query(async ({ ctx }) => {
@@ -16,24 +16,27 @@ export const authRouter = createTRPCRouter({
     cookies.delete(AUTH_COOKIE);
   }),
   register: baseProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        password: z.string(),
-        username: z
-          .string()
-          .min(3, "Username must be at least 3 characters")
-          .max(63, "Username must be at most 63 characters")
-          .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/)
-          // username must start with a letter, end with a letter or number, and contain only letters, numbers, or hyphens.
-          .refine(
-            (val) => !val.includes("--"),
-            "Username must not contain double hyphens"
-          )
-          .transform((val) => val.toLowerCase()),
-      })
-    )
+    .input(registerSchema)
     .mutation(async ({ input, ctx }) => {
+      // check existing user
+      const existingData = await ctx.db.find({
+        collection: "users",
+        limit: 1,
+        where: {
+          username: {
+            equals: input.username,
+          },
+        },
+      });
+
+      const existingUser = existingData.docs[0];
+      if (existingUser) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Username already exists",
+        });
+      }
+
       await ctx.db.create({
         collection: "users",
         data: {
@@ -72,42 +75,35 @@ export const authRouter = createTRPCRouter({
         // siam.funroad.com // cookie doesn't exist here
       });
     }),
-  login: baseProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-        password: z.string(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const data = await ctx.db.login({
-        collection: "users",
-        data: {
-          email: input.email,
-          password: input.password,
-        },
+  login: baseProcedure.input(loginSchema).mutation(async ({ input, ctx }) => {
+    const data = await ctx.db.login({
+      collection: "users",
+      data: {
+        email: input.email,
+        password: input.password,
+      },
+    });
+
+    if (!data.token) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Failed to login",
       });
+    }
 
-      if (!data.token) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Failed to login",
-        });
-      }
+    const cookies = await getCookies();
+    cookies.set({
+      name: AUTH_COOKIE,
+      value: data.token,
+      httpOnly: true,
+      path: "/",
+      // sameSite: "none",
+      // domain: "",
+      // TODO: Ensure cross domain cookie sharing.
+      // funroad.com // initial cookie
+      // siam.funroad.com // cookie doesn't exist here
+    });
 
-      const cookies = await getCookies();
-      cookies.set({
-        name: AUTH_COOKIE,
-        value: data.token,
-        httpOnly: true,
-        path: "/",
-        // sameSite: "none",
-        // domain: "",
-        // TODO: Ensure cross domain cookie sharing.
-        // funroad.com // initial cookie
-        // siam.funroad.com // cookie doesn't exist here
-      });
-
-      return data;
-    }),
+    return data;
+  }),
 });
