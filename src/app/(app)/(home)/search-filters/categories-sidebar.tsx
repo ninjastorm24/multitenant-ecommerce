@@ -1,6 +1,5 @@
 "use client";
-import React, { useState } from "react";
-import { CustomCategory } from "../types";
+import { useState } from "react";
 
 import {
   Sheet,
@@ -10,22 +9,26 @@ import {
 } from "@/components/ui/sheet";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CategoriesGetManyOutputs } from "@/modules/categories/types";
+import { useTRPC } from "@/trpc/client";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  data: CustomCategory[]; //TODO: remove this later
 }
 
-const CategoriesSidebar = ({ onOpenChange, open, data }: Props) => {
+const CategoriesSidebar = ({ onOpenChange, open }: Props) => {
+  const trpc = useTRPC();
+  const { data } = useQuery(trpc.categories.getMany.queryOptions());
   const router = useRouter();
-  const [parentCategories, setParentCategories] = useState<
-    CustomCategory[] | null
+  const [parentCategories, setParentCategories] =
+    useState<CategoriesGetManyOutputs | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<
+    CategoriesGetManyOutputs[0] | null
   >(null);
-  const [selectedCategory, setSelectedCategory] =
-    useState<CustomCategory | null>(null);
 
   // if we have parent categories show those, otherwise show root categories
   const currentCategories = parentCategories ?? data ?? [];
@@ -36,9 +39,9 @@ const CategoriesSidebar = ({ onOpenChange, open, data }: Props) => {
     onOpenChange(open);
   };
 
-  const handleCategoryClick = (category: CustomCategory) => {
+  const handleCategoryClick = (category: CategoriesGetManyOutputs[0]) => {
     if (category.subcategories && category.subcategories.length > 0) {
-      setParentCategories(category.subcategories as CustomCategory[]);
+      setParentCategories(category.subcategories as CategoriesGetManyOutputs);
       setSelectedCategory(category);
     } else {
       // this is a leaf categories (no subcategories)
