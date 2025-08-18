@@ -15,7 +15,6 @@ const SearchInput = ({ disabled }: Props) => {
   const trpc = useTRPC();
   const session = useQuery(trpc.auth.session.queryOptions());
 
-  // check git
   return (
     <div className="flex items-center gap-2 w-full">
       <CategoriesSidebar open={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
