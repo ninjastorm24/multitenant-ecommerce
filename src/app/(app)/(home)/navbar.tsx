@@ -1,6 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTRPC } from "@/trpc/client";
+import { useQuery } from "@tanstack/react-query";
 import { MenuIcon } from "lucide-react";
 import { Poppins } from "next/font/google";
 import Link from "next/link";
@@ -46,6 +48,9 @@ const Navbar = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
 
+  const trpc = useTRPC();
+  const session = useQuery(trpc.auth.session.queryOptions());
+
   return (
     <nav className="h-20 flex border-b justify-between font-medium bg-white">
       <Link href={"/"} className="pl-6 flex items-center">
@@ -82,25 +87,34 @@ const Navbar = () => {
         </Button>
       </div>
 
-      <div className="hidden lg:flex items-center justify-center h-full">
-        <Button
-          asChild
-          variant={"secondary"}
-          className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-white text-black text-lg trasnisition-colors"
-        >
-          <Link prefetch href={"/sign-in"}>
-            Login
-          </Link>
-        </Button>
+      {session.data?.user ? (
         <Button
           asChild
           className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-black text-white text-lg trasnisition-colors hover:text-black"
         >
-          <Link prefetch href={"/sign-up"}>
-            Start Selling
-          </Link>
+          <Link href={"/admin"}>Dashboard</Link>
         </Button>
-      </div>
+      ) : (
+        <div className="hidden lg:flex ">
+          <Button
+            asChild
+            variant={"secondary"}
+            className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-white text-black text-lg trasnisition-colors"
+          >
+            <Link prefetch href={"/sign-in"}>
+              Login
+            </Link>
+          </Button>
+          <Button
+            asChild
+            className="border-0 border-l px-12 h-full rounded-none hover:bg-pink-400 bg-black text-white text-lg trasnisition-colors hover:text-black"
+          >
+            <Link prefetch href={"/sign-up"}>
+              Start Selling
+            </Link>
+          </Button>
+        </div>
+      )}
     </nav>
   );
 };
