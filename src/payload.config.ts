@@ -14,8 +14,6 @@ import { Users } from "./collections/Users";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-console.log(dirname);
-
 export default buildConfig({
   admin: {
     user: Users.slug,

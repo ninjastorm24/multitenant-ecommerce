@@ -25,13 +25,10 @@ export const productsRouter = createTRPCRouter({
           },
         });
 
-        // console.log("categoriesData", JSON.stringify(categoriesData, null, 2));
-
         const formattedData = categoriesData.docs.map((doc) => ({
           ...doc,
           subcategories: (doc.subcategories?.docs || []).map((doc) => ({
             ...(doc as Category),
-            subcategories: undefined,
           })),
         }));
 
