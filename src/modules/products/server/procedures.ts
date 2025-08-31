@@ -1,7 +1,8 @@
 import { Category } from "@/payload-types";
 import { baseProcedure, createTRPCRouter } from "@/trpc/init";
-import type { Where } from "payload";
+import type { Sort, Where } from "payload";
 import { z } from "zod";
+import { sortValues } from "../search-params";
 
 export const productsRouter = createTRPCRouter({
   getMany: baseProcedure
@@ -11,10 +12,22 @@ export const productsRouter = createTRPCRouter({
         minPrice: z.string().nullable().optional(),
         maxPrice: z.string().nullable().optional(),
         tags: z.array(z.string()).nullable().optional(),
+        sort: z.enum(sortValues).nullable().optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       const where: Where = {};
+      let sort: Sort = "-createdAt";
+
+      if (input.sort === "curated") {
+        sort = "-createdAt";
+      }
+      if (input.sort === "trending") {
+        sort = "name";
+      }
+      if (input.sort === "hot_and_new") {
+        sort = "+createdAt";
+      }
 
       if (input.minPrice && input.maxPrice && input.minPrice > input.maxPrice) {
         throw new Error("Minimum price cannot be greater than maximum price");
@@ -80,8 +93,8 @@ export const productsRouter = createTRPCRouter({
       const data = await ctx.db.find({
         collection: "products",
         depth: 1, // populate category and image
-        sort: "name",
         where,
+        sort,
       });
 
       return data;
