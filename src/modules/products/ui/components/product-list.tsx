@@ -1,29 +1,35 @@
-"use client";
-import { Button } from "@/components/ui/button";
-import { DEFAULT_LIMIT } from "@/constants";
-import { useTRPC } from "@/trpc/client";
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
-import { InboxIcon } from "lucide-react";
-import { useProductFilters } from "../../hooks/use-product-filters";
-import ProductCard, { ProductCardSkeleton } from "./product-card";
+'use client';
+import { Button } from '@/components/ui/button';
+import { DEFAULT_LIMIT } from '@/constants';
+import { useTRPC } from '@/trpc/client';
+import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
+import { InboxIcon } from 'lucide-react';
+import { useProductFilters } from '../../hooks/use-product-filters';
+import ProductCard, { ProductCardSkeleton } from './product-card';
 
 interface Props {
   category?: string;
+  tenantSlug?: string;
 }
 
-export const ProductList = ({ category }: Props) => {
+export const ProductList = ({ category, tenantSlug }: Props) => {
   const [filters] = useProductFilters();
   const trpc = useTRPC();
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useSuspenseInfiniteQuery(
       trpc.products.getMany.infiniteQueryOptions(
-        { ...filters, category, limit: DEFAULT_LIMIT },
+        {
+          ...filters,
+          category,
+          tenantSlug,
+          limit: DEFAULT_LIMIT,
+        },
         {
           getNextPageParam: (lastpage) => {
             return lastpage.docs.length > 0 ? lastpage.nextPage : undefined;
           },
-        }
-      )
+        },
+      ),
     );
 
   if (data?.pages[0]?.docs.length === 0) {
@@ -46,8 +52,8 @@ export const ProductList = ({ category }: Props) => {
               id={product.id}
               name={product.name}
               imageUrl={product.image?.url}
-              authorUsername="siam"
-              authorImageUrl={undefined}
+              authorUsername={product.tenant.name}
+              authorImageUrl={product.tenant.image?.url}
               reviewRating={3}
               reviewCount={5}
               price={product.price}
@@ -59,7 +65,7 @@ export const ProductList = ({ category }: Props) => {
           <Button
             disabled={isFetchingNextPage}
             onClick={() => fetchNextPage()}
-            variant={"elevated"}
+            variant={'elevated'}
             className="font-medium disabled:opacity-50 text-base bg-white"
           >
             Load More
