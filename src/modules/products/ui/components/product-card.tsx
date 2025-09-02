@@ -1,53 +1,63 @@
-import { StarIcon } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { generateTenatUrl } from '@/lib/utils';
+import { StarIcon } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface ProductCardProps {
   id: string;
   name: string;
   price: number;
   imageUrl?: string | null;
-  authorUsername: string;
-  authorImageUrl?: string | null;
+  tenantSlug: string;
+  tenantImageUrl?: string | null;
   reviewRating: number;
   reviewCount: number;
 }
 
 const ProductCard = ({
-  authorUsername,
+  tenantSlug,
   id,
   name,
   price,
   reviewCount,
   reviewRating,
-  authorImageUrl,
+  tenantImageUrl,
   imageUrl,
 }: ProductCardProps) => {
+  const router = useRouter();
+
+  const handleUserClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // TODO: redirect to usershop
+    router.push(generateTenatUrl(tenantSlug));
+  };
+
   return (
     <Link href={`/products/${id}`} className="h-full">
       <div className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-shadow border rounded-md bg-white overflow-hidden h-full flex flex-col">
         <div className="relative aspect-square">
           <Image
             alt={name}
-            src={imageUrl || "/placeholder.png"}
+            src={imageUrl || '/placeholder.png'}
             fill
             className="object-cover"
           />
         </div>
         <div className="p-4 flex flex-col flex-1 gap-3 border-y">
           <h2 className="text-lg font-medium line-clamp-4">{name}</h2>
-          {/* TODO: redirect to usershop */}
-          <div className="flex items-center gap-2" onClick={() => {}}>
-            {authorImageUrl && (
+          <div className="flex items-center gap-2" onClick={handleUserClick}>
+            {tenantImageUrl && (
               <Image
-                alt={authorUsername}
-                src={authorImageUrl}
+                alt={tenantSlug}
+                src={tenantImageUrl}
                 width={16}
                 height={16}
                 className="rounded-full border shrink-0 size-[16px]"
               />
             )}
-            <p className="text-sm underline font-medium">{authorUsername}</p>
+            <p className="text-sm underline font-medium">{tenantSlug}</p>
           </div>
           {reviewCount > 0 && (
             <div className="flex items-center gap-1">
@@ -61,9 +71,9 @@ const ProductCard = ({
         <div className="p-4">
           <div className="px-2 py-1 border bg-pink-400 w-fit">
             <p className="text-sm font-medium">
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
+              {new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
                 minimumFractionDigits: 0,
               }).format(Number(price))}
             </p>
